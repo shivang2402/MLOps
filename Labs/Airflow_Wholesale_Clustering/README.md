@@ -86,3 +86,10 @@ Airflow_Wholesale_Clustering/
 - Python 3.12, scikit-learn, pandas, kneed
 - Docker Compose
 - Dataset: [Wholesale Customers](https://www.kaggle.com/datasets/binovi/wholesale-customers-data-set)
+## Screenshots
+
+### DAG Graph View
+![DAG Graph](screenshots/airflow1.png)
+
+### Task Execution Results
+![Task Results](screenshots/airflow2.png)
