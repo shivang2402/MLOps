@@ -1,0 +1,4 @@
+project_id  = "gen-lang-client-0329498639"
+region      = "us-east1"
+zone        = "us-east1-b"
+bucket_name = "shivang-terraform-lab-bucket-2026"
