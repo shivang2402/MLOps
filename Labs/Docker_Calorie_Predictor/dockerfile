@@ -1,0 +1,33 @@
+# Stage 1: Train the model
+FROM python:3.10 AS model_training
+
+WORKDIR /app
+
+COPY requirements.txt /app/
+COPY src/model_training.py /app/
+COPY src/data/exercise_dataset.csv /app/data/exercise_dataset.csv
+
+RUN pip install -r requirements.txt
+RUN python model_training.py
+
+
+# Stage 2: Serve predictions
+FROM python:3.10 AS serving
+
+WORKDIR /app
+
+# Copy artifacts from training stage
+COPY --from=model_training /app/exercise_model.keras /app/
+COPY --from=model_training /app/scaler_X.pkl /app/
+COPY --from=model_training /app/scaler_y.pkl /app/
+COPY --from=model_training /app/activity_names.json /app/
+
+COPY requirements.txt /app/
+COPY src/main.py /app/
+COPY src/templates /app/templates
+
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+EXPOSE 5000
+
+CMD ["python", "main.py"]

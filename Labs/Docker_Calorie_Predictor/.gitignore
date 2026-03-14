@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Model artifacts (generated at runtime by Docker)
+*.keras
+*.pkl
+activity_names.json
+
+# Virtual environments
+venv/
+env/
+.env
+
+# macOS
+.DS_Store
+
+# Docker
+.docker/

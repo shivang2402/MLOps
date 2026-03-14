@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalBurn AI | Exercise Calorie Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green:  #00e676;
+            --orange: #ff6d00;
+            --bg:     #0d1117;
+            --surface: rgba(255,255,255,0.04);
+            --border:  rgba(255,255,255,0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(ellipse at 20% 10%, #0d2818 0%, #0d1117 60%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 520px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-align: center;
+            background: linear-gradient(90deg, var(--green), var(--orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.4rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #607d6e;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+        }
+
+        .field { margin-bottom: 1.4rem; }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #78909c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Search wrapper */
+        .search-wrapper { position: relative; }
+
+        #activity-search {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+        #activity-search:focus {
+            outline: none;
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(0,230,118,0.1);
+        }
+
+        #dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0; right: 0;
+            background: #161b22;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 100;
+            scrollbar-width: thin;
+            scrollbar-color: var(--green) transparent;
+        }
+        #dropdown.open { display: block; }
+
+        .dropdown-item {
+            padding: 10px 16px;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .dropdown-item:hover,
+        .dropdown-item.selected { background: rgba(0,230,118,0.12); color: var(--green); }
+
+        input[type="number"] {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(255,109,0,0.1);
+        }
+
+        .hint { font-size: 0.72rem; color: #546e7a; margin-top: 0.3rem; }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 1rem;
+            background: linear-gradient(135deg, #00c853, var(--orange));
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s;
+        }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Result */
+        #result {
+            margin-top: 1.8rem;
+            background: rgba(0,230,118,0.06);
+            border: 1px solid rgba(0,230,118,0.2);
+            border-radius: 14px;
+            padding: 1.4rem;
+            display: none;
+            animation: fadeUp 0.4s ease;
+        }
+        #result.show { display: block; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-label {
+            font-size: 0.72rem;
+            color: #607d6e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.3rem;
+        }
+        .result-activity {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 1rem;
+        }
+        .calorie-display {
+            display: flex;
+            align-items: baseline;
+            gap: 0.4rem;
+        }
+        .calorie-number {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--green), var(--orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+        .calorie-unit {
+            font-size: 0.9rem;
+            color: #607d6e;
+        }
+        .error-msg {
+            color: #ef5350;
+            font-size: 0.88rem;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>CALBURN AI</h1>
+    <p class="subtitle">Exercise Calorie Predictor &mdash; Neural Network</p>
+
+    <form id="predictForm">
+
+        <!-- Activity selector with live search -->
+        <div class="field">
+            <label for="activity-search">Activity</label>
+            <div class="search-wrapper">
+                <input type="text" id="activity-search" placeholder="Search or select an exercise…" autocomplete="off">
+                <div id="dropdown">
+                    {% for name in activities %}
+                    <div class="dropdown-item" data-id="{{ loop.index0 }}">{{ name }}</div>
+                    {% endfor %}
+                </div>
+                <!-- Hidden field that actually gets submitted -->
+                <input type="hidden" id="activity_id" name="activity_id">
+            </div>
+            <p class="hint">{{ activities | count }} activities available</p>
+        </div>
+
+        <!-- Weight input -->
+        <div class="field">
+            <label for="weight_lbs">Body Weight (lbs)</label>
+            <input type="number" id="weight_lbs" name="weight_lbs"
+                   step="1" min="80" max="400" placeholder="e.g. 155">
+            <p class="hint">Enter your weight in pounds (80 – 400 lbs)</p>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">Predict Calories</button>
+    </form>
+
+    <div id="result">
+        <div class="result-label">Activity</div>
+        <div class="result-activity" id="res-activity"></div>
+        <div class="result-label">Estimated Calories Burned (1 hour)</div>
+        <div class="calorie-display">
+            <span class="calorie-number" id="res-calories"></span>
+            <span class="calorie-unit">kcal</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Searchable dropdown ---
+    const searchInput  = document.getElementById('activity-search');
+    const dropdown     = document.getElementById('dropdown');
+    const hiddenInput  = document.getElementById('activity_id');
+    const items        = Array.from(dropdown.querySelectorAll('.dropdown-item'));
+
+    searchInput.addEventListener('focus', () => dropdown.classList.add('open'));
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.search-wrapper')) dropdown.classList.remove('open');
+    });
+
+    searchInput.addEventListener('input', () => {
+        const q = searchInput.value.toLowerCase();
+        items.forEach(item => {
+            item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+        dropdown.classList.add('open');
+        hiddenInput.value = '';  // clear until user selects
+    });
+
+    items.forEach(item => {
+        item.addEventListener('click', () => {
+            searchInput.value = item.textContent.trim();
+            hiddenInput.value = item.dataset.id;
+            items.forEach(i => i.classList.remove('selected'));
+            item.classList.add('selected');
+            dropdown.classList.remove('open');
+        });
+    });
+
+    // --- Form submission ---
+    document.getElementById('predictForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const btn = document.getElementById('submitBtn');
+        const result = document.getElementById('result');
+
+        if (!hiddenInput.value) {
+            alert('Please select an activity from the list.');
+            return;
+        }
+        if (!document.getElementById('weight_lbs').value) {
+            alert('Please enter your body weight.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Calculating…';
+        result.classList.remove('show');
+
+        const formData = new FormData(e.target);
+        try {
+            const resp = await fetch('/predict', { method: 'POST', body: formData });
+            const data = await resp.json();
+
+            if (data.error) {
+                document.getElementById('res-activity').innerHTML =
+                    `<span class="error-msg">Error: ${data.error}</span>`;
+                document.getElementById('res-calories').textContent = '—';
+            } else {
+                document.getElementById('res-activity').textContent = data.activity;
+                document.getElementById('res-calories').textContent = data.calories_burned;
+            }
+            result.classList.add('show');
+        } catch (err) {
+            alert('Network error. Please try again.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Predict Calories';
+        }
+    });
+</script>
+</body>
+</html>
