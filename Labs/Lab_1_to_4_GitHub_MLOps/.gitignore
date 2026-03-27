@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.joblib
+*.pkl
+*.keras
+activity_data.json
+*_metrics.json
+*_train_summary.json
+.pytest_cache/

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exercise Calorie Predictor</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; }
+        form { display: flex; flex-direction: column; gap: 10px; }
+        input, select, button { padding: 10px; font-size: 16px; }
+        button { background-color: #4CAF50; color: white; cursor: pointer; border: none; border-radius: 5px; }
+        button:hover { background-color: #45a049; }
+        .result { margin-top: 20px; padding: 10px; background-color: #f1f1f1; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🏃 Exercise Calorie Predictor</h1>
+    <form method="POST">
+        <label for="activity_id">Select Activity:</label>
+        <select name="activity_id" id="activity_id" required>
+            <option value="">-- Choose an activity --</option>
+            {% for idx, activity in enumerate(activities) %}
+                <option value="{{ idx }}">{{ activity }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="weight_lbs">Weight (lbs):</label>
+        <input type="number" name="weight_lbs" id="weight_lbs" step="0.1" min="0" required>
+
+        <button type="submit">Predict Calories</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            const resultDiv = document.getElementById('result');
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <strong>${data.activity}</strong><br>
+                        Weight: ${data.weight_lbs} lbs<br>
+                        <strong>Calories Burned: ${data.calories_burned}</strong>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result" style="color: red;">Error: ${data.error}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

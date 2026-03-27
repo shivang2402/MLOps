@@ -20,7 +20,7 @@ WORKDIR /app
 COPY --from=model_training /app/exercise_model.keras /app/
 COPY --from=model_training /app/scaler_X.pkl /app/
 COPY --from=model_training /app/scaler_y.pkl /app/
-COPY --from=model_training /app/activity_names.json /app/
+COPY --from=model_training /app/activity_data.json /app/
 
 COPY requirements.txt /app/
 COPY src/main.py /app/

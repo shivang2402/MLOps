@@ -1,0 +1,13 @@
+{
+  "dataset_path": "src/data/exercise_dataset.csv",
+  "test_size": 0.2,
+  "random_state": 42,
+  "epochs": 3,
+  "batch_size": 32,
+  "validation_split": 0.1,
+  "model_output": "exercise_model.keras",
+  "scaler_x_output": "scaler_X.pkl",
+  "scaler_y_output": "scaler_y.pkl",
+  "activity_output": "activity_data.json",
+  "metrics_output": "training_metrics.json"
+}

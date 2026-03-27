@@ -2,3 +2,4 @@ tensorflow==2.15.0
 scikit-learn
 Flask
 numpy
+pytest

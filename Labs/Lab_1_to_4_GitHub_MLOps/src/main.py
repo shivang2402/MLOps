@@ -1,40 +1,38 @@
 import json
 import os
-import pickle
+from pathlib import Path
 
+import joblib
 import numpy as np
 from flask import Flask, jsonify, render_template, request
 
 
+def load_config(config_path: str) -> dict:
+    with open(config_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 def load_artifacts():
-    import tensorflow as tf
+    model_path = os.getenv("MODEL_PATH", "exercise_model.joblib")
+    config_path = os.getenv("CONFIG_PATH", "config/training_config.json")
 
-    model_path = os.getenv("MODEL_PATH", "exercise_model.keras")
-    scaler_x_path = os.getenv("SCALER_X_PATH", "scaler_X.pkl")
-    scaler_y_path = os.getenv("SCALER_Y_PATH", "scaler_y.pkl")
-    activity_path = os.getenv("ACTIVITY_DATA_PATH", "activity_data.json")
+    model = joblib.load(model_path)
+    config = load_config(config_path)
 
-    model = tf.keras.models.load_model(model_path)
-    with open(scaler_x_path, "rb") as f:
-        scaler_x = pickle.load(f)
-    with open(scaler_y_path, "rb") as f:
-        scaler_y = pickle.load(f)
-    with open(activity_path, "r", encoding="utf-8") as f:
+    with open("activity_data.json", "r", encoding="utf-8") as f:
         activity_data = json.load(f)
 
-    return model, scaler_x, scaler_y, activity_data
+    return model, activity_data, config
 
 
 def create_app():
     app = Flask(__name__)
-    model, scaler_x, scaler_y, activity_data = load_artifacts()
+    model, activity_data, config = load_artifacts()
     activity_names = [a["name"] for a in activity_data]
-
 
     @app.route("/")
     def home():
-        return "Welcome to the Exercise Calorie Predictor API! Visit /predict"
-
+        return "Welcome to Exercise Calorie Predictor! Visit /predict"
 
     @app.route("/predict", methods=["GET", "POST"])
     def predict():
@@ -47,25 +45,23 @@ def create_app():
                 weight_lbs = float(request.form["weight_lbs"])
 
                 if activity_id < 0 or activity_id >= len(activity_data):
-                    return jsonify({"error": "Invalid activity selection"}), 400
+                    return jsonify({"error": "Invalid activity"}), 400
                 if weight_lbs <= 0:
-                    return jsonify({"error": "Weight must be a positive number"}), 400
+                    return jsonify({"error": "Weight must be positive"}), 400
 
                 cal_per_kg = activity_data[activity_id]["cal_per_kg"]
                 x_input = np.array([[cal_per_kg, weight_lbs]])
-                x_scaled = scaler_x.transform(x_input)
-                pred_scaled = model.predict(x_scaled, verbose=0)
-                calories = scaler_y.inverse_transform(pred_scaled)[0][0]
+                pred = model.predict(x_input)[0]
 
                 return jsonify({
                     "activity": activity_names[activity_id],
                     "weight_lbs": weight_lbs,
-                    "calories_burned": round(float(calories), 1),
+                    "calories_burned": round(float(pred), 1),
                 })
             except (KeyError, ValueError) as e:
                 return jsonify({"error": str(e)}), 400
 
-        return "Unsupported HTTP method", 405
+        return "Unsupported method", 405
 
     return app
 
