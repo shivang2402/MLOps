@@ -1,136 +1,102 @@
-# Lab 1-4: GitHub Actions ML Pipeline with Exercise Calorie Prediction
+# GitHub Actions Lab: Exercise Calorie Predictor
 
-Complete MLOps lab combining Labs 1-4 concepts with custom CSV dataset and model comparison.
+## Overview
+An ML pipeline that trains multiple regression models on exercise calorie data, selects the best one by RMSE, and serves predictions through a Flask app. GitHub Actions automates the full cycle — tests, training, evaluation, and artifact upload.
 
-## Lab Coverage
+## Modifications from Original Lab
+1. **Different Dataset** — Real exercise calorie burn data (248 activities) instead of synthetic/Iris
+2. **Different Task** — Multi-model regression with automatic selection instead of single-model classification
+3. **Fixed Jinja template** — Original used `enumerate()` in the template loop which isn't valid Jinja2; replaced with `loop.index0`
+4. **Fixed inference input** — Original passed `[cal_per_kg, weight_lbs]` as a numpy array but the model is a sklearn Pipeline expecting a DataFrame with all training feature columns; now builds the correct DataFrame and scales prediction by user weight
+5. **Config-driven training** — Hyperparameters, feature selection, and model list controlled via JSON config
+6. **Activity metadata export** — Training now generates `activity_data.json` so the Flask app doesn't depend on the raw CSV at runtime
 
-### Lab 1: Testing & Code Quality
-- Unit tests in `tests/`
-- Pytest configuration
-- CI runs automated tests
-- Test coverage for config loading, data validation, and app routes
-
-### Lab 2: Model Training & Versioning
-- `src/train_model.py` trains multiple regression models
-- Automatic model selection based on RMSE metric
-- Versioned model artifacts with timestamp
-- Training metrics saved to JSON
-
-### Lab 3: Reproducibility & Pipeline
-- `config/training_config.json` drives all hyperparameters
-- Config-based feature selection and preprocessing
-- One-command reproducible training and evaluation
-- `src/evaluate_model.py` computes regression metrics (MAE/RMSE/R2/MAPE)
-
-### Lab 4: CI/CD & Workflow Automation
-- GitHub Actions workflow (`.github/workflows/lab_1_to_4_ci.yml`)
-- Triggers on code push and manual workflow dispatch
-- Pipeline stages:
-  1. Install dependencies
-  2. Run tests
-  3. Train model
-  4. Evaluate model
-  5. Upload artifacts
-- Supports containerization (ready for Docker integration)
+## Labs 1–4 Coverage Map
+1. **Lab 1 (Testing + Code quality)**
+	- Unit tests under `tests/`
+	- CI runs `pytest`
+2. **Lab 2 (Model training + versioned artifacts)**
+	- `src/train_model.py` trains Linear Regression, Random Forest, and Gradient Boosting
+	- Best model auto-selected by RMSE, saved with timestamp
+3. **Lab 3 (Pipeline repeatability + config)**
+	- `config/training_config.json` drives all hyperparameters and feature selection
+	- `src/evaluate_model.py` computes MAE/RMSE/R2
+4. **Lab 4 (CI/CD + workflow automation)**
+	- GitHub Actions workflow: `.github/workflows/lab_1_to_4_ci.yml`
+	- Pipeline: install → test → train → evaluate → upload artifacts
 
 ## Dataset
+**Source:** [Kaggle — Calories Burned During Exercise](https://www.kaggle.com/datasets/aadhavvignesh/calories-burned-during-exercise-and-activities)
 
-- **Source:** Exercise calorie burn data (248 activities)
-- **Features:** Activity type, weight breakpoints (130-205 lbs), calories per kg
-- **Target:** Calories burned per hour at 205 lbs
-- **Location:** `src/data/exercise_dataset.csv`
+| Column | Description |
+|--------|-------------|
+| Activity | Name of the exercise (248 activities) |
+| 130 lb – 205 lb | Calories burned at each body weight |
+| Calories per kg | Normalised burn rate |
 
-## Models
+**Target:** Calories burned per hour at 205 lb
 
-Configuration supports automatic comparison of:
-- Linear Regression
-- Random Forest
-- Gradient Boosting
+## Model
+- **Algorithm:** Best of Linear Regression / Random Forest / Gradient Boosting (auto-selected)
+- **Features:** Activity name (one-hot encoded), weight breakpoints (130/155/180 lb), calories per kg
+- **Preprocessing:** sklearn Pipeline with `ColumnTransformer` (OneHotEncoder + StandardScaler)
+- **Inference:** Model predicts 205 lb baseline, then scales proportionally to user weight
 
-Best model is automatically selected by RMSE and saved for serving.
+## Directory Structure
+```
+GitHub_Actions_Exercise_Predictor/
+├── src/
+│   ├── data/
+│   │   └── exercise_dataset.csv
+│   ├── templates/
+│   │   └── predict.html
+│   ├── train_model.py
+│   ├── evaluate_model.py
+│   └── main.py
+├── config/
+│   └── training_config.json
+├── tests/
+│   ├── conftest.py
+│   ├── test_training.py
+│   └── test_app.py
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
 
-## Local Execution
+## Setup & Run
 
 ### Run Tests
-
 ```bash
 pip install -r requirements.txt
 pytest -v
 ```
 
 ### Train Model
-
 ```bash
 timestamp=$(date '+%Y%m%d%H%M%S')
-python src/train_model.py --timestamp "$timestamp" --config "config/training_config.json"
+python src/train_model.py --timestamp "$timestamp" --config config/training_config.json
 ```
 
-Outputs:
-- `model_<timestamp>_<selected_model>_exercise_calories.joblib`
+Generated artifacts:
+- `model_<timestamp>_<model_name>_exercise_calories.joblib`
 - `<timestamp>_train_summary.json`
+- `activity_data.json`
 
 ### Evaluate Model
-
 ```bash
-python src/evaluate_model.py --timestamp "$timestamp" --config "config/training_config.json"
+python src/evaluate_model.py --timestamp "$timestamp" --config config/training_config.json
 ```
-
-Outputs:
-- `<timestamp>_metrics.json`
 
 ### Run Flask App
-
 ```bash
-# First: train model to generate artifacts
-# Then:
+ln -sf model_*_exercise_calories.joblib exercise_model.joblib
 python src/main.py
-# Visit: http://localhost:5001/predict
 ```
 
-## File Structure
+Open [http://localhost:5001/predict](http://localhost:5001/predict)
 
-```
-Lab_1_to_4_GitHub_MLOps/
-├── src/
-│   ├── data/
-│   │   └── exercise_dataset.csv
-│   ├── templates/
-│   │   └── predict.html
-│   ├── train_model.py          (Lab 2/3: model training + selection)
-│   ├── evaluate_model.py       (Lab 3: metrics computation)
-│   └── main.py                 (Lab 4: Flask app)
-├── config/
-│   └── training_config.json    (Lab 3: reproducible config)
-├── tests/
-│   ├── conftest.py
-│   ├── test_training.py        (Lab 1: training tests)
-│   └── test_app.py             (Lab 1: app tests)
-├── requirements.txt
-├── README.md
-└── .github/
-    └── workflows/
-        └── lab_1_to_4_ci.yml   (Lab 4: CI workflow)
-```
-
-## Customizations from Original Lab 2
-
-1. **Dataset**: Real exercise calorie data instead of synthetic
-2. **Models**: Multiple regression models with automatic selection
-3. **Metrics**: Expanded evaluation (MAE/RMSE/R2/MAPE/within 50 cal %)
-4. **Config**: JSON-driven hyperparameters and feature selection
-5. **Tests**: Unit tests for config, data, and Flask routes
-6. **Workflow**: Complete GitHub Actions pipeline with artifact upload
-7. **App**: Flask app with config-driven preprocessing
-
-## Next Steps for Submission
-
-1. Initialize a new GitHub repository
-2. Push this Lab_1_to_4_GitHub_MLOps folder to main branch
-3. GitHub Actions workflow runs automatically
-4. Access model artifacts and metrics from workflow runs
-
-## Example Prediction
-
-- Activity: "Running, 5 mph"
-- Weight: 180 lbs
-- Predicted Calories: ~540 cal/hr
+## Tech Stack
+- Python 3.10, scikit-learn, Flask, pandas, joblib
+- GitHub Actions CI/CD
+- Dataset: [Kaggle Exercise Dataset](https://www.kaggle.com/datasets/aadhavvignesh/calories-burned-during-exercise-and-activities)

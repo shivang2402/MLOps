@@ -6,9 +6,10 @@ WORKDIR /app
 COPY requirements.txt /app/
 COPY src/model_training.py /app/
 COPY src/data/exercise_dataset.csv /app/data/exercise_dataset.csv
+COPY config/training_config_docker.json /app/config/training_config_docker.json
 
 RUN pip install -r requirements.txt
-RUN python model_training.py
+RUN python model_training.py --config config/training_config_docker.json
 
 
 # Stage 2: Serve predictions

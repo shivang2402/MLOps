@@ -17,8 +17,8 @@
         <label for="activity_id">Select Activity:</label>
         <select name="activity_id" id="activity_id" required>
             <option value="">-- Choose an activity --</option>
-            {% for idx, activity in enumerate(activities) %}
-                <option value="{{ idx }}">{{ activity }}</option>
+            {% for activity in activities %}
+                <option value="{{ loop.index0 }}">{{ activity }}</option>
             {% endfor %}
         </select>
 

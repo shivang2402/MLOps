@@ -8,3 +8,4 @@ activity_data.json
 *_metrics.json
 *_train_summary.json
 .pytest_cache/
+*.log

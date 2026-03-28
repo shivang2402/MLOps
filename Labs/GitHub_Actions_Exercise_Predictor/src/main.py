@@ -1,9 +1,8 @@
 import json
 import os
-from pathlib import Path
 
 import joblib
-import numpy as np
+import pandas as pd
 from flask import Flask, jsonify, render_template, request
 
 
@@ -15,11 +14,12 @@ def load_config(config_path: str) -> dict:
 def load_artifacts():
     model_path = os.getenv("MODEL_PATH", "exercise_model.joblib")
     config_path = os.getenv("CONFIG_PATH", "config/training_config.json")
+    activity_path = os.getenv("ACTIVITY_DATA_PATH", "activity_data.json")
 
     model = joblib.load(model_path)
     config = load_config(config_path)
 
-    with open("activity_data.json", "r", encoding="utf-8") as f:
+    with open(activity_path, "r", encoding="utf-8") as f:
         activity_data = json.load(f)
 
     return model, activity_data, config
@@ -49,14 +49,23 @@ def create_app():
                 if weight_lbs <= 0:
                     return jsonify({"error": "Weight must be positive"}), 400
 
-                cal_per_kg = activity_data[activity_id]["cal_per_kg"]
-                x_input = np.array([[cal_per_kg, weight_lbs]])
-                pred = model.predict(x_input)[0]
+                selected = activity_data[activity_id]
+
+                x_input = pd.DataFrame([{
+                    "Activity, Exercise or Sport (1 hour)": selected["name"],
+                    "130 lb": selected["130_lb"],
+                    "155 lb": selected["155_lb"],
+                    "180 lb": selected["180_lb"],
+                    "Calories per kg": selected["cal_per_kg"],
+                }])
+
+                pred_205 = model.predict(x_input)[0]
+                calories = pred_205 * (weight_lbs / 205.0)
 
                 return jsonify({
-                    "activity": activity_names[activity_id],
+                    "activity": selected["name"],
                     "weight_lbs": weight_lbs,
-                    "calories_burned": round(float(pred), 1),
+                    "calories_burned": round(float(calories), 1),
                 })
             except (KeyError, ValueError) as e:
                 return jsonify({"error": str(e)}), 400

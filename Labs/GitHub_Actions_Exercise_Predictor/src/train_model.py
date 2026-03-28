@@ -66,6 +66,20 @@ if __name__ == "__main__":
 
     df = pd.read_csv(dataset_path)
 
+    activity_col = "Activity, Exercise or Sport (1 hour)"
+    activity_data = []
+    for _, row in df.iterrows():
+        activity_data.append({
+            "name": row[activity_col],
+            "cal_per_kg": float(row["Calories per kg"]),
+            "130_lb": float(row["130 lb"]),
+            "155_lb": float(row["155 lb"]),
+            "180_lb": float(row["180 lb"]),
+        })
+
+    with open("activity_data.json", "w", encoding="utf-8") as f:
+        json.dump(activity_data, f)
+
     target_column = config["target_column"]
     feature_columns = config["feature_columns"]
     categorical_columns = config.get("categorical_columns", [])

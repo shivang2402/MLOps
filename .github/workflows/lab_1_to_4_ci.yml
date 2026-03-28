@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - "Labs/Lab_1_to_4_GitHub_MLOps/**"
+      - "Labs/GitHub_Actions_Exercise_Predictor/**"
       - ".github/workflows/lab_1_to_4_ci.yml"
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Labs/Lab_1_to_4_GitHub_MLOps
+        working-directory: Labs/GitHub_Actions_Exercise_Predictor
 
     steps:
       - name: Checkout
@@ -41,6 +41,6 @@ jobs:
         with:
           name: model-artifacts-${{ github.run_id }}
           path: |
-            Labs/Lab_1_to_4_GitHub_MLOps/**_metrics.json
-            Labs/Lab_1_to_4_GitHub_MLOps/**_train_summary.json
-            Labs/Lab_1_to_4_GitHub_MLOps/model_*.joblib
+            Labs/GitHub_Actions_Exercise_Predictor/**_metrics.json
+            Labs/GitHub_Actions_Exercise_Predictor/**_train_summary.json
+            Labs/GitHub_Actions_Exercise_Predictor/model_*.joblib
