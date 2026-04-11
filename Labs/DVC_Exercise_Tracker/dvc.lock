@@ -39,8 +39,8 @@ stages:
         train:
           test_size: 0.3
           random_state: 42
-          n_estimators: 100
-          max_depth: 10
+          n_estimators: 200
+          max_depth: 15
     outs:
     - path: model/label_encoder.pkl
       hash: md5
@@ -48,9 +48,9 @@ stages:
       size: 6622
     - path: model/metrics.json
       hash: md5
-      md5: e1269f0be3f721d204e8171490963aed
-      size: 100
+      md5: ccae1e8813ed8e49b241333ecdd1a310
+      size: 101
     - path: model/model.pkl
       hash: md5
-      md5: 8aaef62799cb74b4bc7d530bbe763988
-      size: 1407529
+      md5: 4d8329bfc5bc249d98fe4702d192f1c6
+      size: 2806981

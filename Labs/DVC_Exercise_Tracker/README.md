@@ -203,17 +203,41 @@ A       model/model.pkl
 
 ## Data Versioning Workflow
 
-### Track a new version of the dataset
+### Track a new version
 
 ```bash
-# Replace or update data/exercise_dataset.csv
-dvc repro          # re-runs affected pipeline stages
+# Change params (e.g., n_estimators: 100 → 200, max_depth: 10 → 15)
+dvc repro          # re-runs only affected stages
+dvc metrics diff   # compare old vs new
 git add dvc.lock params.yaml model/metrics.json
-git commit -m "Update dataset v2"
+git commit -m "Pipeline v2: 200 estimators, depth 15"
 dvc push
 ```
 
-### Revert to a previous dataset version
+### Version comparison (v1 → v2)
+
+Changing `n_estimators: 100 → 200` and `max_depth: 10 → 15`:
+
+```bash
+$ dvc repro
+Stage 'process' didn't change, skipping
+Running stage 'train':
+> python src/train.py
+Metrics: {'mae': 5.4722, 'rmse': 19.3739, 'r2': 0.9956}
+
+$ dvc metrics diff
+Path                Metric    HEAD     workspace    Change
+model/metrics.json  mae       5.441    5.4722       0.0312
+model/metrics.json  r2        0.9957   0.9956       -0.0001
+model/metrics.json  rmse      19.0079  19.3739      0.366
+
+$ dvc push
+1 file pushed
+```
+
+DVC only re-ran `train` (data didn't change) and only pushed 1 new artifact (updated model).
+
+### Revert to a previous version
 
 ```bash
 git checkout <commit-hash>
@@ -226,8 +250,9 @@ dvc checkout
 - **Features:** activity (label-encoded), weight_lbs, weight_kg, cal_per_kg
 - **Target:** Calories burned per hour
 - **Train/Test Split:** 70/30 (694 train, 298 test)
-- **Hyperparameters:** 100 estimators, max depth 10 (configurable in `params.yaml`)
-- **Test MAE:** 5.44 calories | **R2:** 0.9957
+- **Hyperparameters:** configurable in `params.yaml` (v1: 100 trees/depth 10, v2: 200 trees/depth 15)
+- **v1 Metrics:** MAE 5.44, RMSE 19.01, R2 0.9957
+- **v2 Metrics:** MAE 5.47, RMSE 19.37, R2 0.9956
 
 ## Tech Stack
 
