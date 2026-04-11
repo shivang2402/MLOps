@@ -1,0 +1,56 @@
+schema: '2.0'
+stages:
+  process:
+    cmd: python src/process_data.py
+    deps:
+    - path: data/exercise_dataset.csv
+      hash: md5
+      md5: 1b974beb62e86b58dc78bcdee1a61f70
+      size: 14599
+    - path: src/process_data.py
+      hash: md5
+      md5: a1a64b7f4a21cefdc7487b376272f94f
+      size: 1958
+    params:
+      params.yaml:
+        data:
+          raw: data/exercise_dataset.csv
+          processed: data/processed.csv
+    outs:
+    - path: data/processed.csv
+      hash: md5
+      md5: 2d2bed97978d76c30f8bb3289c7714f7
+      size: 55980
+  train:
+    cmd: python src/train.py
+    deps:
+    - path: data/processed.csv
+      hash: md5
+      md5: 2d2bed97978d76c30f8bb3289c7714f7
+      size: 55980
+    - path: src/train.py
+      hash: md5
+      md5: 454e92a6e738b4e7e5e32b1a71b65855
+      size: 2449
+    params:
+      params.yaml:
+        model:
+          dir: model
+        train:
+          test_size: 0.3
+          random_state: 42
+          n_estimators: 100
+          max_depth: 10
+    outs:
+    - path: model/label_encoder.pkl
+      hash: md5
+      md5: d286ba42370ccd367c0422ff5cd03686
+      size: 6622
+    - path: model/metrics.json
+      hash: md5
+      md5: e1269f0be3f721d204e8171490963aed
+      size: 100
+    - path: model/model.pkl
+      hash: md5
+      md5: 8aaef62799cb74b4bc7d530bbe763988
+      size: 1407529

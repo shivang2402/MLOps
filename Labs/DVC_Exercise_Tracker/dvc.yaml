@@ -1,0 +1,25 @@
+stages:
+  process:
+    cmd: python src/process_data.py
+    deps:
+      - src/process_data.py
+      - data/exercise_dataset.csv
+    params:
+      - data
+    outs:
+      - data/processed.csv
+
+  train:
+    cmd: python src/train.py
+    deps:
+      - src/train.py
+      - data/processed.csv
+    params:
+      - train
+      - model
+    outs:
+      - model/model.pkl
+      - model/label_encoder.pkl
+    metrics:
+      - model/metrics.json:
+          cache: false

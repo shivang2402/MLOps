@@ -1,0 +1,5 @@
+[core]
+    remote = myremote
+['remote "myremote"']
+    url = gs://mlops-dvc-exercise-shiv
+    credentialpath = /Users/shiv/Desktop/Sem 4/MLOps/MLOps_temp/Labs/DVC_Exercise_Tracker/keys/dvc-key.json
